@@ -1,9 +1,11 @@
 import axios from 'axios'
 import type { DashboardData, RulesConfig, RulesSchema, ScannerStrategy } from '../types'
 
-// In production (e.g. Vercel), set VITE_API_URL to your backend origin.
-// Locally Vite proxies /api → localhost:8000.
-const apiBase = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') || ''
+// Local: Vite proxies /api → localhost:8000
+// Production: prefer VITE_API_URL; fall back to Railway (or same-origin /api via Vercel rewrite)
+const PROD_API = 'https://tradele-api-production.up.railway.app'
+const configured = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '')
+const apiBase = configured || (import.meta.env.PROD ? PROD_API : '')
 const api = axios.create({ baseURL: apiBase ? `${apiBase}/api` : '/api' })
 
 export async function fetchDashboard(): Promise<DashboardData> {
