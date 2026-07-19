@@ -1,0 +1,15 @@
+# Railway / Docker
+.dockerignore
+.git
+.venv
+venv
+UI/node_modules
+UI/dist
+**/__pycache__
+*.pyc
+.env
+.DS_Store
+.vercel
+docs
+*.md
+!README.md

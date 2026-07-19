@@ -83,6 +83,8 @@ class Settings(BaseSettings):
     # App
     tz: str = "Asia/Kolkata"
     log_level: str = "INFO"
+    # Comma-separated extra CORS origins for production frontends
+    cors_origins: str = ""
 
     # Filters
     min_avg_volume: int = 100_000
