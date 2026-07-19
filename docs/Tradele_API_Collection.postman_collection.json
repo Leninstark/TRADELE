@@ -1,0 +1,284 @@
+{
+  "info": {
+    "name": "Tradele API",
+    "description": "Full API collection for Tradele backend – alerts, news, market (Kite), scan, Zerodha.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8000" },
+    { "key": "request_token", "value": "" },
+    { "key": "symbol", "value": "RELIANCE" },
+    { "key": "exchange", "value": "NSE" }
+  ],
+  "item": [
+    {
+      "name": "Health & Root",
+      "item": [
+        {
+          "name": "Root",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/"
+          }
+        },
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alerts",
+      "item": [
+        {
+          "name": "Latest Alerts (Top 10 Long + Short)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/alerts/latest"
+          }
+        },
+        {
+          "name": "List Alerts (all)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/alerts?limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "alerts"],
+              "query": [
+                { "key": "limit", "value": "50" },
+                { "key": "direction", "value": "long", "disabled": true },
+                { "key": "direction", "value": "short", "disabled": true }
+              ]
+            }
+        },
+        {
+          "name": "List Alerts (long only)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/alerts?direction=long&limit=50"
+          }
+        },
+        {
+          "name": "List Alerts (short only)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/alerts?direction=short&limit=50"
+          }
+        }
+      ]
+    },
+    {
+      "name": "News",
+      "item": [
+        {
+          "name": "News (unified agent – impact for tomorrow)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/news"
+          }
+        },
+        {
+          "name": "News (raw only, skip_agent=true)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/news?skip_agent=true"
+          }
+        },
+        {
+          "name": "News Sources",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/news/sources"
+          }
+        },
+        {
+          "name": "News by Symbol",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/news/symbol/{{symbol}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Screener (Apify)",
+      "item": [
+        {
+          "name": "Screener runQuery (default)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/screener?mode=runQuery"
+          }
+        },
+        {
+          "name": "Screener runQuery (custom)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/screener?mode=runQuery&query_string=Market%20Capitalization%20%3E%2050000%20AND%20Price%20to%20Earning%20%3C%2020"
+          }
+        },
+        {
+          "name": "Screener getstockdetails (company)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/screener?mode=getstockdetails&url=https%3A%2F%2Fwww.screener.in%2Fcompany%2FRELIANCE%2F"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Market (Kite)",
+      "item": [
+        {
+          "name": "Historical OHLCV",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/market/historical?symbol=RELIANCE&exchange=NSE&interval=day&from_date=2025-02-01&to_date=2025-03-06&use_cache=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "market", "historical"],
+              "query": [
+                { "key": "symbol", "value": "RELIANCE" },
+                { "key": "exchange", "value": "NSE" },
+                { "key": "interval", "value": "day" },
+                { "key": "from_date", "value": "2025-02-01" },
+                { "key": "to_date", "value": "2025-03-06" },
+                { "key": "use_cache", "value": "true" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Historical (5min intraday)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/market/historical?symbol=RELIANCE&interval=5minute&from_date=2025-03-05&to_date=2025-03-06"
+          }
+        },
+        {
+          "name": "Quote (live)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/market/quote?instruments=NSE:RELIANCE,NSE:INFY",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "market", "quote"],
+              "query": [
+                { "key": "instruments", "value": "NSE:RELIANCE,NSE:INFY" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "LTP",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/market/ltp/{{exchange}}/{{symbol}}"
+          }
+        },
+        {
+          "name": "Instruments (NSE)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/market/instruments?exchange=NSE"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Scan",
+      "item": [
+        {
+          "name": "Trigger EOD Scan",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/scan/eod"
+          }
+        },
+        {
+          "name": "Trigger Morning Alert",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/scan/morning"
+          }
+        },
+        {
+          "name": "Scan Runs (all)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/scan/runs?limit=20"
+          }
+        },
+        {
+          "name": "Scan Runs (eod only)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/scan/runs?run_type=eod&limit=20"
+          }
+        },
+        {
+          "name": "Scan Runs (pre_market only)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/scan/runs?run_type=pre_market&limit=20"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zerodha",
+      "item": [
+        {
+          "name": "Get Login URL",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/zerodha/login-url"
+          }
+        },
+        {
+          "name": "Exchange Request Token for Access Token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/zerodha/session?request_token=PASTE_REQUEST_TOKEN_HERE",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "zerodha", "session"],
+              "query": [
+                { "key": "request_token", "value": "{{request_token}}" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

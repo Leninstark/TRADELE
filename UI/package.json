@@ -1,0 +1,38 @@
+{
+  "name": "ui",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "oxlint",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^5.16.14",
+    "@mui/material": "^5.16.14",
+    "@mui/x-data-grid": "^7.23.6",
+    "ag-grid-community": "^36.0.0",
+    "ag-grid-react": "^36.0.0",
+    "axios": "^1.18.1",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
+    "lightweight-charts": "^5.2.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-router-dom": "^7.18.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.2",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.2",
+    "oxlint": "^1.69.0",
+    "typescript": "~6.0.2",
+    "vite": "^8.1.0"
+  }
+}

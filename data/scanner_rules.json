@@ -1,0 +1,355 @@
+{
+  "version": 1,
+  "updated_at": "2026-06-28T19:32:44.639204+00:00",
+  "strategies": [
+    {
+      "id": "ema_golden_cross",
+      "name": "Golden Cross",
+      "style": "swing",
+      "description": "EMA20 crossed above EMA50 with volume confirmation",
+      "min_confidence": 0.55,
+      "enabled": true,
+      "conditions": [
+        {
+          "id": "ema_cross",
+          "label": "EMA20 crossed EMA50",
+          "field": "ema_20",
+          "operator": "cross_above",
+          "value": null,
+          "ref_field": "ema_50",
+          "weight": 2.0,
+          "reason_template": "EMA20 crossed above EMA50"
+        },
+        {
+          "id": "vol_spike",
+          "label": "Volume > 1.5x avg",
+          "field": "volume_ratio",
+          "operator": "gte",
+          "value": 1.5,
+          "ref_field": null,
+          "weight": 1.0,
+          "reason_template": "Volume {value:.1f}x 20-day average"
+        },
+        {
+          "id": "rsi_momentum",
+          "label": "RSI 50-70",
+          "field": "rsi",
+          "operator": "between",
+          "value": [
+            50,
+            70
+          ],
+          "ref_field": null,
+          "weight": 1.0,
+          "reason_template": "RSI {value:.0f} (momentum zone)"
+        }
+      ]
+    },
+    {
+      "id": "high_volume_breakout",
+      "name": "High Volume Breakout",
+      "style": "swing",
+      "description": "Price breaks 20-day high with 2x volume",
+      "min_confidence": 0.55,
+      "enabled": true,
+      "conditions": [
+        {
+          "id": "breakout",
+          "label": "Above 20D high",
+          "field": "close",
+          "operator": "gt",
+          "value": null,
+          "ref_field": "high_20d",
+          "weight": 2.0,
+          "reason_template": "Breakout above 20D high ({ref:.2f})"
+        },
+        {
+          "id": "vol_2x",
+          "label": "Volume 2x",
+          "field": "volume_ratio",
+          "operator": "gte",
+          "value": 2,
+          "ref_field": null,
+          "weight": 1.5,
+          "reason_template": "Volume {value:.1f}x average"
+        },
+        {
+          "id": "macd_bull",
+          "label": "MACD bullish",
+          "field": "macd_hist",
+          "operator": "gt",
+          "value": 0,
+          "ref_field": null,
+          "weight": 1.0,
+          "reason_template": "MACD histogram positive"
+        }
+      ]
+    },
+    {
+      "id": "nr7",
+      "name": "NR7",
+      "style": "swing",
+      "description": "Narrowest range in 7 days — volatility contraction",
+      "min_confidence": 0.55,
+      "enabled": true,
+      "conditions": [
+        {
+          "id": "nr7",
+          "label": "NR7",
+          "field": "is_nr7",
+          "operator": "eq",
+          "value": true,
+          "ref_field": null,
+          "weight": 2.0,
+          "reason_template": "NR7 — narrowest range in 7 days"
+        },
+        {
+          "id": "near_high",
+          "label": "Near 20D high",
+          "field": "close",
+          "operator": "within_pct",
+          "value": 3,
+          "ref_field": "high_20d",
+          "weight": 1.0,
+          "reason_template": "Within {pct}% of 20D high"
+        }
+      ]
+    },
+    {
+      "id": "vwap_bounce",
+      "name": "VWAP Bounce",
+      "style": "intraday",
+      "description": "Price bounced off VWAP with volume",
+      "min_confidence": 0.55,
+      "enabled": true,
+      "conditions": [
+        {
+          "id": "above_vwap",
+          "label": "Above VWAP",
+          "field": "close",
+          "operator": "gt",
+          "value": null,
+          "ref_field": "vwap",
+          "weight": 1.5,
+          "reason_template": "Price above VWAP ({ref:.2f})"
+        },
+        {
+          "id": "vol_spike",
+          "label": "Volume spike",
+          "field": "volume_ratio",
+          "operator": "gte",
+          "value": 1.5,
+          "ref_field": null,
+          "weight": 1.0,
+          "reason_template": "Volume {value:.1f}x average"
+        },
+        {
+          "id": "rsi_ok",
+          "label": "RSI 45-65",
+          "field": "rsi",
+          "operator": "between",
+          "value": [
+            45,
+            65
+          ],
+          "ref_field": null,
+          "weight": 1.0,
+          "reason_template": "RSI {value:.0f}"
+        }
+      ]
+    },
+    {
+      "id": "gap_up_continuation",
+      "name": "Gap Up Continuation",
+      "style": "intraday",
+      "description": "Gap up with momentum continuation",
+      "min_confidence": 0.55,
+      "enabled": true,
+      "conditions": [
+        {
+          "id": "gap_up",
+          "label": "Gap up > 1%",
+          "field": "gap_pct",
+          "operator": "gte",
+          "value": 1,
+          "ref_field": null,
+          "weight": 2.0,
+          "reason_template": "Gap up {value:.1f}%"
+        },
+        {
+          "id": "above_open",
+          "label": "Above open",
+          "field": "close",
+          "operator": "gt",
+          "value": null,
+          "ref_field": "open",
+          "weight": 1.0,
+          "reason_template": "Holding above open"
+        },
+        {
+          "id": "vol_confirm",
+          "label": "Volume confirm",
+          "field": "volume_ratio",
+          "operator": "gte",
+          "value": 1.2,
+          "ref_field": null,
+          "weight": 1.0,
+          "reason_template": "Volume {value:.1f}x"
+        }
+      ]
+    },
+    {
+      "id": "volume_spike",
+      "name": "Volume Spike",
+      "style": "intraday",
+      "description": "Unusual volume with price momentum",
+      "min_confidence": 0.55,
+      "enabled": true,
+      "conditions": [
+        {
+          "id": "vol_3x",
+          "label": "Volume > 3x",
+          "field": "volume_ratio",
+          "operator": "gte",
+          "value": 3,
+          "ref_field": null,
+          "weight": 2.0,
+          "reason_template": "Volume spike {value:.1f}x"
+        },
+        {
+          "id": "price_up",
+          "label": "Price up",
+          "field": "change_pct",
+          "operator": "gt",
+          "value": 0.5,
+          "ref_field": null,
+          "weight": 1.0,
+          "reason_template": "Price up {value:.1f}%"
+        }
+      ]
+    },
+    {
+      "id": "near_200_ema",
+      "name": "Near 200 EMA",
+      "style": "positional",
+      "description": "Pullback to 200 EMA in uptrend",
+      "min_confidence": 0.55,
+      "enabled": true,
+      "conditions": [
+        {
+          "id": "uptrend",
+          "label": "EMA50 > EMA200",
+          "field": "ema_50",
+          "operator": "gt",
+          "value": null,
+          "ref_field": "ema_200",
+          "weight": 1.5,
+          "reason_template": "Uptrend: EMA50 above EMA200"
+        },
+        {
+          "id": "near_200",
+          "label": "Within 3% of EMA200",
+          "field": "close",
+          "operator": "within_pct",
+          "value": 3,
+          "ref_field": "ema_200",
+          "weight": 2.0,
+          "reason_template": "Within {pct}% of 200 EMA"
+        },
+        {
+          "id": "rsi_ok",
+          "label": "RSI 40-60",
+          "field": "rsi",
+          "operator": "between",
+          "value": [
+            40,
+            60
+          ],
+          "ref_field": null,
+          "weight": 1.0,
+          "reason_template": "RSI {value:.0f} (healthy pullback)"
+        }
+      ]
+    },
+    {
+      "id": "52w_high_breakout",
+      "name": "52 Week High Breakout",
+      "style": "positional",
+      "description": "Breaking out near 52-week high",
+      "min_confidence": 0.55,
+      "enabled": true,
+      "conditions": [
+        {
+          "id": "near_52w",
+          "label": "Within 2% of 52W high",
+          "field": "close",
+          "operator": "within_pct",
+          "value": 2,
+          "ref_field": "high_52w",
+          "weight": 2.0,
+          "reason_template": "Within {pct}% of 52-week high"
+        },
+        {
+          "id": "vol_confirm",
+          "label": "Volume confirm",
+          "field": "volume_ratio",
+          "operator": "gte",
+          "value": 1.5,
+          "ref_field": null,
+          "weight": 1.0,
+          "reason_template": "Volume {value:.1f}x average"
+        },
+        {
+          "id": "macd_bull",
+          "label": "MACD bullish",
+          "field": "macd_hist",
+          "operator": "gt",
+          "value": 0,
+          "ref_field": null,
+          "weight": 1.0,
+          "reason_template": "MACD positive"
+        }
+      ]
+    },
+    {
+      "id": "weekly_breakout",
+      "name": "Weekly Breakout",
+      "style": "positional",
+      "description": "Monthly/weekly range breakout with trend",
+      "min_confidence": 0.55,
+      "enabled": true,
+      "conditions": [
+        {
+          "id": "above_ema50",
+          "label": "Above EMA50",
+          "field": "close",
+          "operator": "gt",
+          "value": null,
+          "ref_field": "ema_50",
+          "weight": 1.0,
+          "reason_template": "Price above EMA50"
+        },
+        {
+          "id": "break_20w",
+          "label": "Above 20-week high proxy",
+          "field": "close",
+          "operator": "gt",
+          "value": null,
+          "ref_field": "high_20d",
+          "weight": 2.0,
+          "reason_template": "Breaking recent range high"
+        },
+        {
+          "id": "adx_trend",
+          "label": "ADX > 20",
+          "field": "adx",
+          "operator": "gte",
+          "value": 20,
+          "ref_field": null,
+          "weight": 1.0,
+          "reason_template": "ADX {value:.0f} (trending)"
+        }
+      ]
+    }
+  ]
+}
