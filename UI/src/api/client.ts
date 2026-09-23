@@ -2,10 +2,29 @@ import axios from 'axios'
 import type { DashboardData, RulesConfig, RulesSchema, ScannerStrategy } from '../types'
 
 // Local: Vite proxies /api → localhost:8000
-// Production: prefer VITE_API_URL; fall back to Railway (or same-origin /api via Vercel rewrite)
-const PROD_API = 'https://tradele-api-production.up.railway.app'
-const configured = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '')
-const apiBase = configured || (import.meta.env.PROD ? PROD_API : '')
+// Production on tradele.pro / Vercel: same-origin /api (rewritten to the API)
+// Override: VITE_API_URL  |  fallback: api.tradele.pro, then Railway
+const RAILWAY_API = 'https://tradele-api-production.up.railway.app'
+const CUSTOM_API = 'https://api.tradele.pro'
+
+function resolveApiBase(): string {
+  const configured = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '')
+  if (configured) return configured
+  if (!import.meta.env.PROD || typeof window === 'undefined') return ''
+  const host = window.location.hostname
+  if (
+    host === 'tradele.pro' ||
+    host === 'www.tradele.pro' ||
+    host.endsWith('.vercel.app') ||
+    host === 'localhost' ||
+    host === '127.0.0.1'
+  ) {
+    return ''
+  }
+  return CUSTOM_API || RAILWAY_API
+}
+
+const apiBase = resolveApiBase()
 const api = axios.create({ baseURL: apiBase ? `${apiBase}/api` : '/api' })
 
 export async function fetchDashboard(): Promise<DashboardData> {
@@ -955,9 +974,7 @@ export interface NewsSymbolFeedGroup {
 
 export function getNewsWsUrl(username?: string): string {
   const user = encodeURIComponent(username || 'leninstark')
-  const configured = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '')
-  const prodApi = 'https://tradele-api-production.up.railway.app'
-  const base = configured || (import.meta.env.PROD ? prodApi : '')
+  const base = resolveApiBase()
   const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
   if (base) {
     try {

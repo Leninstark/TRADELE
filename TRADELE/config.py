@@ -102,8 +102,13 @@ class Settings(BaseSettings):
     # App
     tz: str = "Asia/Kolkata"
     log_level: str = "INFO"
+    # Public UI origin — used for broker OAuth return redirects
+    public_app_url: str = Field(default="http://localhost:5173", validation_alias="PUBLIC_APP_URL")
     # Comma-separated extra CORS origins for production frontends
-    cors_origins: str = ""
+    cors_origins: str = Field(
+        default="https://tradele.pro,https://www.tradele.pro",
+        validation_alias="CORS_ORIGINS",
+    )
 
     # Filters
     min_avg_volume: int = 100_000

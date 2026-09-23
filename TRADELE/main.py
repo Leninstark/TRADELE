@@ -35,8 +35,13 @@ app = FastAPI(
 _default_origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "https://tradele.pro",
+    "https://www.tradele.pro",
     "https://tradele.vercel.app",
 ]
+_frontend = (getattr(settings, "public_app_url", "") or "").strip().rstrip("/")
+if _frontend and _frontend not in _default_origins:
+    _default_origins.append(_frontend)
 _extra = [o.strip() for o in (getattr(settings, "cors_origins", None) or "").split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
@@ -93,14 +98,16 @@ async def root(
                 save_access_token(db, "leninstark", data["access_token"])
             finally:
                 db.close()
+            app_url = (settings.public_app_url or "http://localhost:5173").rstrip("/")
             return RedirectResponse(
-                "http://localhost:5173/mytrade?zerodha=connected",
+                f"{app_url}/mytrade?zerodha=connected",
                 status_code=302,
             )
         except Exception as e:
             logger.exception("Zerodha OAuth on / failed: %s", e)
+            app_url = (settings.public_app_url or "http://localhost:5173").rstrip("/")
             return RedirectResponse(
-                "http://localhost:5173/mytrade?zerodha=error",
+                f"{app_url}/mytrade?zerodha=error",
                 status_code=302,
             )
 

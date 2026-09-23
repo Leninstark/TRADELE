@@ -13,3 +13,5 @@ UI/dist
 docs
 *.md
 !README.md
+data/jarvis
+.cursor
