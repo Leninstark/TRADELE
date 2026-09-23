@@ -409,7 +409,7 @@ export default function TraderDnaReportView({ report }: Props) {
               ['Do more', finalV.do_more],
             ].map(([k, v]) => (
               <div key={String(k)}>
-                <dt>{k}</dt>
+                <dt>{String(k)}</dt>
                 <dd>{fmt(v)}</dd>
               </div>
             ))}
