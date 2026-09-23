@@ -39,20 +39,35 @@ def run_scanners(
     db: Session = Depends(get_db),
 ):
     """Run scanners for a trading style or single strategy."""
-    if strategy_id:
-        strategy = get_strategy(strategy_id)
-        if not strategy:
-            return {"error": f"Unknown strategy: {strategy_id}"}
-        from TRADELE.services.data_fetcher import apply_liquidity_filters, fetch_eod_batch
-        from TRADELE.engines.scanners.runner import run_scan
-        from TRADELE.services.zerodha_client import get_client
+    from TRADELE.services.zerodha_client import KiteRateLimitError
 
-        client = get_client()
-        symbol_data = apply_liquidity_filters(fetch_eod_batch(client, db))
-        results = run_scan(symbol_data, strategy, top_n=top_n)
-        return {
-            "strategy": strategy_id,
-            "matches": [m.to_dict() for m in results],
-        }
+    rate_limit_payload = {
+        "style": style or "all",
+        "symbol_count": 0,
+        "strategies": {},
+        "top_picks": [],
+        "counts": {},
+        "error": "rate_limit",
+        "message": "Too many requests",
+    }
 
-    return run_live_scan(db, style=style, top_n_per_strategy=top_n)
+    try:
+        if strategy_id:
+            strategy = get_strategy(strategy_id)
+            if not strategy:
+                return {"error": f"Unknown strategy: {strategy_id}"}
+            from TRADELE.services.data_fetcher import apply_liquidity_filters, fetch_eod_batch
+            from TRADELE.engines.scanners.runner import run_scan
+            from TRADELE.services.zerodha_client import get_client
+
+            client = get_client()
+            symbol_data = apply_liquidity_filters(fetch_eod_batch(client, db))
+            results = run_scan(symbol_data, strategy, top_n=top_n)
+            return {
+                "strategy": strategy_id,
+                "matches": [m.to_dict() for m in results],
+            }
+
+        return run_live_scan(db, style=style, top_n_per_strategy=top_n)
+    except KiteRateLimitError:
+        return rate_limit_payload

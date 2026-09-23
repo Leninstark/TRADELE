@@ -10,6 +10,7 @@ import {
   type SwingTabId,
 } from '../api/client'
 import SwingDataGrid from '../components/SwingDataGrid'
+import DashboardStockModal from '../components/DashboardStockModal'
 import { getSwingColumns } from '../components/swingColumns'
 import { TAB_HELP } from '../components/swingTabHelp'
 import { exportSwingToExcel } from '../utils/exportExcel'
@@ -27,11 +28,12 @@ const SWING_TABS: SwingTab[] = [
     label: 'Dashboard',
     filterTitle: 'Dashboard',
     conditions: [
-      'Full metrics for Universe stocks',
-      'Zerodha: LTP, Change %, Company',
-      'Calculated: Returns, RSI, ADX, EMAs, Breakout, Rel Strength',
-      'AI trade levels for top picks',
-      'Scan: Universe → all filter tabs → Stock Score → Dashboard',
+      'Top 20 by estimated 2-week upside %',
+      '+20% is the conviction bar (highlighted)',
+      'Ranked by ATR + momentum (Gemini when available)',
+      'Identify BEFORE the big move (not late chases)',
+      'Click Symbol for AI thesis & full metrics',
+      'Scan: Universe → filters → Stock Score → Dashboard',
     ],
   },
   {
@@ -197,6 +199,7 @@ export default function Swing() {
   const [scanning, setScanning] = useState(false)
   const [scanStatus, setScanStatus] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [detailStock, setDetailStock] = useState<SwingStock | null>(null)
 
   const applyPayload = useCallback((data: SwingScanResult) => {
     const err = data.meta?.error
@@ -228,6 +231,7 @@ export default function Swing() {
   }, [applyPayload])
 
   useEffect(() => {
+    setDetailStock(null)
     loadResults(activeTab)
   }, [activeTab, loadResults])
 
@@ -358,8 +362,9 @@ export default function Swing() {
               </>
             ) : activeTab === 'dashboard' ? (
               <>
-                No dashboard data yet. Click the <strong>scan icon</strong> on the Dashboard tab to
-                run Universe → all filters → Stock Score → Dashboard.
+                No 2-week swing candidates yet. Click the <strong>scan icon</strong> on Dashboard to
+                run Universe → filters → Stock Score → rebuild the top-20 upside board. Then click a
+                symbol for the AI thesis.
               </>
             ) : (
               <>
@@ -382,10 +387,17 @@ export default function Swing() {
               meta={meta}
               runFinishedAt={runInfo?.finished_at ?? null}
               loading={busy}
+              onRowClick={
+                activeTab === 'dashboard' ? (row) => setDetailStock(row) : undefined
+              }
             />
           )
         )}
       </div>
+
+      {detailStock && (
+        <DashboardStockModal stock={detailStock} onClose={() => setDetailStock(null)} />
+      )}
     </div>
   )
 }

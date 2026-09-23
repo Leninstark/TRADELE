@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from TRADELE.config import settings
 from TRADELE.services.universe import get_tradeable_equity_symbols
-from TRADELE.services.zerodha_client import ZerodhaClient
+from TRADELE.services.zerodha_client import KiteRateLimitError, ZerodhaClient
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,10 @@ def fetch_eod_batch(
     lookback_days: int = 25,
     max_symbols: Optional[int] = None,
 ) -> dict[str, list[dict[str, Any]]]:
-    """Fetch day candles for symbols; return {symbol: list of OHLCV}."""
+    """Fetch day candles for symbols; return {symbol: list of OHLCV}.
+
+    Raises KiteRateLimitError on first Zerodha rate-limit so callers can stop cleanly.
+    """
     as_of = as_of or date.today()
     from_date = as_of - timedelta(days=lookback_days)
     symbols = symbols or get_tradeable_equity_symbols(client=client)
@@ -41,19 +44,31 @@ def fetch_eod_batch(
                 candles = _load_from_cache_only(db, sym, EXCHANGE, DAY_INTERVAL, from_date, as_of)
             else:
                 candles = client.get_historical(
-                symbol=sym,
-                exchange=EXCHANGE,
-                interval=DAY_INTERVAL,
-                from_date=from_date,
-                to_date=as_of,
-                db=db,
-                use_cache=True,
-            )
+                    symbol=sym,
+                    exchange=EXCHANGE,
+                    interval=DAY_INTERVAL,
+                    from_date=from_date,
+                    to_date=as_of,
+                    db=db,
+                    use_cache=True,
+                )
             if candles:
                 out[sym] = candles
+        except KiteRateLimitError:
+            logger.warning("EOD batch stopped early: Too many requests (have %s symbols)", len(out))
+            raise
         except Exception as e:
+            if _is_rate_limit_msg(e):
+                logger.warning("EOD batch stopped early: Too many requests (have %s symbols)", len(out))
+                raise KiteRateLimitError("Too many requests") from e
             logger.debug("EOD fetch failed for %s: %s", sym, e)
     return out
+
+
+def _is_rate_limit_msg(exc: BaseException) -> bool:
+    from TRADELE.services.zerodha_client import _is_rate_limit
+
+    return _is_rate_limit(exc)
 
 
 def candles_to_dataframe(candles: list[dict]) -> pd.DataFrame:

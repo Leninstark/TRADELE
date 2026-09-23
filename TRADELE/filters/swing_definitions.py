@@ -36,12 +36,11 @@ PARALLEL_SCAN_TABS = (
 
 TAB_FILTER_TOOLTIPS: dict[str, list[str]] = {
     TAB_DASHBOARD: [
-        "Full metrics grid for Universe stocks",
-        "Zerodha: Symbol, Company, LTP, Change %",
-        "Calculated: Returns, Volume, RSI, ADX, ATR, EMAs, Breakout, Rel Strength",
-        "NSE: Delivery %",
-        "AI: Momentum Score, Entry, Stop, Targets, Risk/Reward, Remarks (top picks)",
-        "Use Scan on Dashboard tab to run Universe → all tabs → Stock Score → rebuild",
+        "2-week swing board — top 20 by estimated upside %",
+        "Ranked by 14-day profit potential (ATR + momentum; Gemini when available)",
+        "+20% conviction is highlighted — lower estimates still appear in the top 20",
+        "Click a Symbol for full AI thesis, trade plan, and metric breakdown",
+        "Scan runs Universe → filter tabs → Stock Score → rebuilds this board",
     ],
     TAB_STOCK_SCORE: [
         "Weighted composite score (0–100) across 10 factors",

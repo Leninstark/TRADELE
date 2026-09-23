@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from TRADELE.db.session import get_db
 from TRADELE.db.models import ScanRun
-from TRADELE.scheduler.jobs import run_eod_scan, run_morning_alert
+from TRADELE.scheduler.jobs import run_eod_scan, run_groww_eod_sync, run_morning_alert
 
 router = APIRouter()
 
@@ -21,6 +21,13 @@ def trigger_morning_alert():
     """Run morning alert now (same as 9:25 AM)."""
     run_morning_alert()
     return {"status": "triggered", "job": "morning"}
+
+
+@router.post("/groww-eod")
+def trigger_groww_eod_sync():
+    """Run Groww MyTrade sync now (same as scheduled post-market job)."""
+    run_groww_eod_sync()
+    return {"status": "triggered", "job": "groww_eod_sync"}
 
 
 @router.get("/runs")

@@ -93,20 +93,47 @@ interface Props {
   meta: Record<string, unknown>
   runFinishedAt: string | null
   loading?: boolean
+  onRowClick?: (stock: SwingStock) => void
 }
 
-export default function SwingDataGrid({ stocks, columns, meta, runFinishedAt, loading }: Props) {
+export default function SwingDataGrid({
+  stocks,
+  columns,
+  meta,
+  runFinishedAt,
+  loading,
+  onRowClick,
+}: Props) {
   const rows = stocks.map((s) => ({ ...s, id: s.symbol }))
   const lastScan = runFinishedAt
     ? new Date(runFinishedAt).toLocaleString('en-IN')
     : null
+
+  const cols = columns.map((col) => {
+    if (col.field !== 'symbol' || !onRowClick) return col
+    return {
+      ...col,
+      renderCell: (params: { row: SwingStock }) => (
+        <button
+          type="button"
+          className="swing-symbol-link"
+          onClick={(e) => {
+            e.stopPropagation()
+            onRowClick(params.row)
+          }}
+        >
+          {params.row.symbol}
+        </button>
+      ),
+    }
+  })
 
   return (
     <ThemeProvider theme={tableTheme}>
       <Box className="swing-universe-grid">
         <DataGrid
           rows={rows}
-          columns={columns}
+          columns={cols}
           loading={loading}
           slots={{ toolbar: SwingToolbar }}
           slotProps={{
@@ -117,6 +144,11 @@ export default function SwingDataGrid({ stocks, columns, meta, runFinishedAt, lo
             },
           }}
           disableRowSelectionOnClick
+          onRowClick={
+            onRowClick
+              ? (params) => onRowClick(params.row as SwingStock)
+              : undefined
+          }
           density="compact"
           pageSizeOptions={[25, 50, 100]}
           initialState={{
@@ -125,6 +157,7 @@ export default function SwingDataGrid({ stocks, columns, meta, runFinishedAt, lo
           sx={{
             border: 'none',
             backgroundColor: '#ffffff',
+            cursor: onRowClick ? 'pointer' : 'default',
             '& .MuiDataGrid-columnHeaders': {
               backgroundColor: '#f6f6f7',
               borderBottom: '1px solid #e9e9eb',

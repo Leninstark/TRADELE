@@ -6,7 +6,7 @@ from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
-from TRADELE.api.routes import admin, agents, alerts, dashboard, explore, filters, indicators, market, news, scan, scanners, screener, swing, zerodha
+from TRADELE.api.routes import admin, agents, alerts, dashboard, explore, filters, fno, groww, indicators, intraday, jarvis, market, mytrade, news, scan, scanners, screener, swing, watchlist, zerodha
 from TRADELE.scheduler.jobs import start_scheduler
 from TRADELE.config import settings
 
@@ -51,6 +51,7 @@ app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
 app.include_router(agents.router, prefix="/api/agents", tags=["agents"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["dashboard"])
 app.include_router(scanners.router, prefix="/api/scanners", tags=["scanners"])
+app.include_router(intraday.router, prefix="/api/intraday", tags=["intraday"])
 app.include_router(indicators.router, prefix="/api/indicators", tags=["indicators"])
 app.include_router(alerts.router, prefix="/api/alerts", tags=["alerts"])
 app.include_router(news.router, prefix="/api/news", tags=["news"])
@@ -58,9 +59,14 @@ app.include_router(screener.router, prefix="/api/screener", tags=["screener"])
 app.include_router(market.router, prefix="/api/market", tags=["market"])
 app.include_router(scan.router, prefix="/api/scan", tags=["scan"])
 app.include_router(zerodha.router, prefix="/api/zerodha", tags=["zerodha"])
+app.include_router(groww.router, prefix="/api/groww", tags=["groww"])
+app.include_router(mytrade.router, prefix="/api/mytrade", tags=["mytrade"])
 app.include_router(filters.router, prefix="/api/filters", tags=["filters"])
 app.include_router(swing.router, prefix="/api/swing", tags=["swing"])
 app.include_router(explore.router, prefix="/api/explore", tags=["explore"])
+app.include_router(watchlist.router, prefix="/api/watchlist", tags=["watchlist"])
+app.include_router(jarvis.router, prefix="/api/jarvis", tags=["jarvis"])
+app.include_router(fno.router, prefix="/api/fno", tags=["fno"])
 
 
 @app.get("/")
@@ -76,11 +82,11 @@ async def root(
     """
     if request_token and (not status or status == "success"):
         try:
-            from kiteconnect import KiteConnect
             from TRADELE.db.session import SessionLocal
+            from TRADELE.services.zerodha_client import make_kite
             from TRADELE.services.zerodha_token_store import save_access_token
 
-            kite = KiteConnect(api_key=settings.kite_api_key)
+            kite = make_kite()
             data = kite.generate_session(request_token, api_secret=settings.kite_api_secret)
             db = SessionLocal()
             try:
@@ -88,13 +94,13 @@ async def root(
             finally:
                 db.close()
             return RedirectResponse(
-                "http://localhost:5173/explore?zerodha=connected",
+                "http://localhost:5173/mytrade?zerodha=connected",
                 status_code=302,
             )
         except Exception as e:
             logger.exception("Zerodha OAuth on / failed: %s", e)
             return RedirectResponse(
-                f"http://localhost:5173/explore?zerodha=error",
+                "http://localhost:5173/mytrade?zerodha=error",
                 status_code=302,
             )
 

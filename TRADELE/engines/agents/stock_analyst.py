@@ -27,7 +27,7 @@ from TRADELE.filters.universe import (
     load_full_symbol_company_map,
     load_full_symbol_industry_map,
 )
-from TRADELE.services.llm_agent import call_gemini, call_llm
+from TRADELE.services.llm_agent import call_llm_auto, last_llm_provider
 from TRADELE.services.news_aggregator import NewsItem, fetch_google_news
 from TRADELE.services.screener_service import run_screener_query
 from TRADELE.services.zerodha_client import get_client
@@ -90,8 +90,27 @@ def resolve_symbol(query: str) -> tuple[Optional[str], Optional[str]]:
                 best = (sym, comp)
     if best:
         return best
-    # Unknown to CSV universe — still allow raw symbol (Zerodha may resolve it)
+
+    # Unknown to the CSV universe — ask Zerodha, so tickers resolve to a real
+    # company name (better news/LLM context) and names resolve to a ticker.
+    resolved = _resolve_via_zerodha(q, query.strip())
+    if resolved:
+        return resolved
     return q, q
+
+
+def _resolve_via_zerodha(symbol: str, raw_query: str) -> Optional[tuple[str, str]]:
+    try:
+        client = get_client()
+        name = client.get_instrument_name(f"NSE:{symbol}")
+        if name:
+            return symbol, name.title()
+        match = client.search_equity(raw_query)
+        if match:
+            return match[0], match[1].title()
+    except Exception as e:
+        logger.debug("Zerodha symbol resolution failed for %s: %s", symbol, e)
+    return None
 
 
 def _clean_company(company: str) -> str:
@@ -167,6 +186,10 @@ def build_metrics(symbol: str, db: Session) -> Optional[dict[str, Any]]:
         try:
             candles = client.get_historical(symbol, "NSE", "day", from_date, to_date, db=db)
         except Exception as cache_err:
+            from TRADELE.services.zerodha_client import KiteRateLimitError
+
+            if isinstance(cache_err, KiteRateLimitError):
+                raise
             logger.debug("cached fetch failed for %s (%s); retrying without cache", symbol, cache_err)
             try:
                 db.rollback()
@@ -176,6 +199,10 @@ def build_metrics(symbol: str, db: Session) -> Optional[dict[str, Any]]:
                 symbol, "NSE", "day", from_date, to_date, use_cache=False
             )
     except Exception as e:
+        from TRADELE.services.zerodha_client import KiteRateLimitError
+
+        if isinstance(e, KiteRateLimitError):
+            raise
         logger.warning("historical fetch failed for %s: %s", symbol, e)
         return None
     if not candles or len(candles) < 20:
@@ -408,15 +435,13 @@ def analyze_stock(query: str, db: Session) -> dict[str, Any]:
     news, industry_news = _gather_news(symbol, company or symbol, sector)
 
     prompt = _build_prompt(symbol, company or symbol, sector, metrics, fundamentals, news, industry_news)
-    raw = call_gemini(prompt) if settings.gemini_api_key else None
-    if not raw:
-        raw = call_llm(prompt)
+    raw = call_llm_auto(prompt)
 
     report: dict[str, Any]
     if raw:
         try:
             report = json.loads(_extract_json(raw))
-            report["engine"] = "gemini" if settings.gemini_api_key else "llm"
+            report["engine"] = last_llm_provider() or settings.llm_provider or "llm"
         except (json.JSONDecodeError, KeyError) as e:
             logger.warning("stock analyst LLM parse failed for %s: %s", symbol, e)
             report = _rule_based_report(metrics, company or symbol)

@@ -7,9 +7,8 @@ import json
 import logging
 from typing import Any, Optional
 
-from TRADELE.config import settings
 from TRADELE.services.news_aggregator import NewsItem, aggregate_news
-from TRADELE.services.llm_agent import call_gemini, call_llm
+from TRADELE.services.llm_agent import call_llm_auto
 
 logger = logging.getLogger(__name__)
 
@@ -94,9 +93,7 @@ def node_summarize_impact(state: dict[str, Any]) -> dict[str, Any]:
         "Example: [{\"stock_name\": \"RELIANCE\", \"direction\": \"up\", \"reason\": \"Strong demand\", \"what_news_says\": \"...\", \"source\": \"Moneycontrol\"}]"
     )
     prompt = "\n".join(lines)
-    raw = call_gemini(prompt) if getattr(settings, "gemini_api_key", None) else None
-    if not raw:
-        raw = call_llm(prompt)
+    raw = call_llm_auto(prompt)
     if not raw:
         return {
             "impact_summary": "LLM not configured or call failed.",
@@ -176,7 +173,7 @@ def run_news_agent() -> dict[str, Any]:
         news_dicts = [_news_to_dict(n) for n in items]
         summary = ""
         stocks_impact = {}
-        raw = call_llm(
+        raw = call_llm_auto(
             "Summarize in 2 sentences the likely impact on Indian stock markets tomorrow based on these headlines:\n"
             + "\n".join(n.title for n in items[:20])
         )

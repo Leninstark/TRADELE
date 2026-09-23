@@ -12,7 +12,7 @@ from TRADELE.rules.engine import RuleEngine, RuleResult
 from TRADELE.rules.registry import all_strategies, get_strategy, strategies_by_style
 from TRADELE.rules.registry_types import ScannerStrategy
 from TRADELE.services.data_fetcher import apply_liquidity_filters, fetch_eod_batch
-from TRADELE.services.zerodha_client import ZerodhaClient, get_client
+from TRADELE.services.zerodha_client import KiteRateLimitError, ZerodhaClient, get_client
 
 logger = logging.getLogger(__name__)
 
@@ -108,7 +108,19 @@ def run_live_scan(
 ) -> dict[str, Any]:
     """Fetch data and run scanners — main entry for API."""
     client = get_client()
-    symbol_data = fetch_eod_batch(client, db, symbols=symbols)
+    try:
+        symbol_data = fetch_eod_batch(client, db, symbols=symbols)
+    except KiteRateLimitError:
+        return {
+            "style": style or "all",
+            "symbol_count": 0,
+            "strategies": {},
+            "top_picks": [],
+            "counts": {},
+            "error": "rate_limit",
+            "message": "Too many requests",
+        }
+
     symbol_data = apply_liquidity_filters(symbol_data)
 
     by_strategy = run_all_scanners(symbol_data, style=style, top_n_per_strategy=top_n_per_strategy)

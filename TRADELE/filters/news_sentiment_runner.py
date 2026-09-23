@@ -8,7 +8,7 @@ from typing import Any, Optional
 
 from TRADELE.config import settings
 from TRADELE.filters.swing_definitions import TAB_NEWS_SENTIMENT, filter_tooltip_dict
-from TRADELE.services.llm_agent import call_gemini, call_llm
+from TRADELE.services.llm_agent import call_llm_auto, llm_is_configured
 from TRADELE.services.news_aggregator import aggregate_news
 
 logger = logging.getLogger(__name__)
@@ -68,7 +68,7 @@ Return ONLY a JSON array (no markdown). One object per stock that has news OR Ne
 
 Use exact NSE symbols from the list. sentiment must be Positive, Neutral, or Negative."""
 
-    raw = call_gemini(prompt) or call_llm(prompt)
+    raw = call_llm_auto(prompt)
     if not raw:
         return [_keyword_sentiment(s, news_dicts) for s in symbols]
 
@@ -135,7 +135,7 @@ def run_news_sentiment_scan(symbols: list[str]) -> dict[str, Any]:
         reverse=True,
     )
 
-    llm_ok = bool(settings.gemini_api_key or settings.openai_api_key)
+    llm_ok = llm_is_configured()
     return {
         "tab": TAB_NEWS_SENTIMENT,
         "filter": filter_tooltip_dict(TAB_NEWS_SENTIMENT),
@@ -145,9 +145,9 @@ def run_news_sentiment_scan(symbols: list[str]) -> dict[str, Any]:
             "scored_count": len(stocks),
             "headlines_used": len(news_dicts),
             "note": (
-                "LLM sentiment via Gemini/OpenAI."
+                "LLM sentiment via configured provider (claude_cli/gemini/openai)."
                 if llm_ok
-                else "LLM not configured; using keyword fallback. Set GEMINI_API_KEY."
+                else "LLM not configured; using keyword fallback. Set LLM_PROVIDER=claude_cli or GEMINI_API_KEY."
             ),
         },
     }
