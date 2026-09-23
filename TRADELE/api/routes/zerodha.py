@@ -27,11 +27,11 @@ class TokenPayload(BaseModel):
 @router.get("/login-url")
 def get_login_url():
     """Return Kite Connect OAuth login URL (open in a new tab)."""
-    from kiteconnect import KiteConnect
+    from TRADELE.services.zerodha_client import make_kite
 
     if not settings.kite_api_key:
         raise HTTPException(400, "KITE_API_KEY is not set in .env")
-    kite = KiteConnect(api_key=settings.kite_api_key)
+    kite = make_kite()
     return {
         "login_url": kite.login_url(),
         "message": "Open in a new tab, complete login, then paste access_token in TRADELE.",
@@ -92,10 +92,10 @@ def set_session(
     db: Session = Depends(get_db),
 ):
     """Exchange request_token → access_token and store in DB."""
-    from kiteconnect import KiteConnect
+    from TRADELE.services.zerodha_client import make_kite
 
     try:
-        kite = KiteConnect(api_key=settings.kite_api_key)
+        kite = make_kite()
         data = kite.generate_session(request_token, api_secret=settings.kite_api_secret)
         token = data["access_token"]
         row = save_access_token(db, username, token)
@@ -121,9 +121,9 @@ def oauth_callback(
     if not request_token:
         return HTMLResponse("<h2>Missing request_token</h2>", status_code=400)
     try:
-        from kiteconnect import KiteConnect
+        from TRADELE.services.zerodha_client import make_kite
 
-        kite = KiteConnect(api_key=settings.kite_api_key)
+        kite = make_kite()
         data = kite.generate_session(request_token, api_secret=settings.kite_api_secret)
         token = data["access_token"]
         save_access_token(db, "leninstark", token)

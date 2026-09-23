@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Outfit:wght@600;700;800&display=swap');
 
 :root {
   --gw-green: #00b386;
@@ -9,6 +9,8 @@
   --gw-bg: #ffffff;
   --gw-bg-page: #f6f6f7;
   --gw-bg-card: #ffffff;
+  --gw-bg-elevated: #ffffff;
+  --gw-tooltip-bg: #ffffff;
   --gw-border: #e9e9eb;
   --gw-border-light: #f0f0f2;
   --gw-text: #44475b;
@@ -21,8 +23,10 @@
   --gw-radius-sm: 8px;
   --header-h: 64px;
   --subnav-h: 48px;
+  --font-brand: 'Outfit', 'DM Sans', system-ui, sans-serif;
+  --font-ui: 'DM Sans', system-ui, -apple-system, sans-serif;
 
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-ui);
   line-height: 1.5;
   color: var(--gw-text);
   background: var(--gw-bg-page);

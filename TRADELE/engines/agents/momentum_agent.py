@@ -18,7 +18,7 @@ from TRADELE.config import settings
 from TRADELE.db.session import SessionLocal
 from TRADELE.engines.indicators.calculator import IndicatorCalculator
 from TRADELE.services.data_fetcher import apply_liquidity_filters, fetch_eod_batch
-from TRADELE.services.llm_agent import call_gemini, call_llm
+from TRADELE.services.llm_agent import call_llm_auto
 from TRADELE.services.universe import NIFTY500_SAMPLE, get_tradeable_equity_symbols
 from TRADELE.services.zerodha_client import get_client
 
@@ -241,9 +241,7 @@ def node_gemini_analyze(state: dict[str, Any]) -> dict[str, Any]:
     )
     prompt = "\n".join(lines)
 
-    raw = call_gemini(prompt) if settings.gemini_api_key else None
-    if not raw:
-        raw = call_llm(prompt)
+    raw = call_llm_auto(prompt)
 
     if not raw:
         picks = [_candidate_to_pick(c, confidence=c["momentum_score"]) for c in candidates[:top_n]]

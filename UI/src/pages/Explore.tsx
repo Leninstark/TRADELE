@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   analyzeStock,
+  fetchExploreRecent,
   fetchExploreSymbols,
+  type ExploreRecentItem,
   type HorizonOutlook,
   type StockAnalysis,
   type SymbolSuggestion,
@@ -98,7 +100,24 @@ export default function Explore() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [analysis, setAnalysis] = useState<StockAnalysis | null>(null)
+  const [recent, setRecent] = useState<ExploreRecentItem[]>([])
+  const [recentLoading, setRecentLoading] = useState(true)
   const boxRef = useRef<HTMLDivElement>(null)
+
+  const loadRecent = useCallback(async () => {
+    try {
+      const items = await fetchExploreRecent(30)
+      setRecent(items)
+    } catch {
+      /* keep prior list */
+    } finally {
+      setRecentLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadRecent()
+  }, [loadRecent])
 
   useEffect(() => {
     const q = query.trim()
@@ -125,38 +144,43 @@ export default function Explore() {
     return () => document.removeEventListener('mousedown', onClick)
   }, [])
 
-  const runAnalysis = useCallback(async (symbol: string) => {
-    const q = symbol.trim()
-    if (!q) return
-    setShowSuggest(false)
-    setLoading(true)
-    setError('')
-    setAnalysis(null)
-    try {
-      const res = await analyzeStock(q)
-      if (res.error) {
-        setError(res.message || 'Could not analyse this stock.')
-        setAnalysis(null)
-      } else {
-        setAnalysis(res)
+  const runAnalysis = useCallback(
+    async (symbol: string) => {
+      const q = symbol.trim()
+      if (!q) return
+      setShowSuggest(false)
+      setQuery(q.toUpperCase())
+      setLoading(true)
+      setError('')
+      setAnalysis(null)
+      try {
+        const res = await analyzeStock(q)
+        if (res.error) {
+          setError(res.message || 'Could not analyse this stock.')
+          setAnalysis(null)
+        } else {
+          setAnalysis(res)
+          void loadRecent()
+        }
+      } catch (e) {
+        const err = e as { response?: { data?: { detail?: string } }; message?: string }
+        setError(err.response?.data?.detail || err.message || 'Analysis failed. Try again.')
+      } finally {
+        setLoading(false)
       }
-    } catch (e) {
-      const err = e as { response?: { data?: { detail?: string } }; message?: string }
-      setError(err.response?.data?.detail || err.message || 'Analysis failed. Try again.')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+    },
+    [loadRecent],
+  )
 
   const report = analysis?.report
 
   return (
     <div className="explore-page">
       <div>
-        <h1 className="explore-title">Explore</h1>
+        <h1 className="explore-title">Deep Agent</h1>
         <p className="xp-sub">
-          Search any NSE stock for a deep, AI-driven report — fundamentals, technicals and sentiment,
-          with a week / month / 3-month outlook.
+          AI deep research on any NSE stock.
+          Same-day reports are cached; they refresh automatically the next day.
         </p>
       </div>
 
@@ -184,6 +208,19 @@ export default function Explore() {
           >
             {loading ? 'Analysing…' : 'Analyse'}
           </button>
+          {analysis && !loading && (
+            <button
+              type="button"
+              className="btn ghost xp-recent-btn"
+              onClick={() => {
+                setAnalysis(null)
+                setError('')
+                void loadRecent()
+              }}
+            >
+              ← Recent
+            </button>
+          )}
         </div>
         {showSuggest && suggestions.length > 0 && (
           <ul className="xp-suggest">
@@ -203,6 +240,49 @@ export default function Explore() {
         )}
       </div>
 
+      {!loading && !analysis && (
+        <section className="xp-recent" aria-label="Recent Deep Agent searches">
+          <div className="xp-recent-head">
+            <h2>Recent searches</h2>
+            <span>Last 30 · click a box for the full report</span>
+          </div>
+          {recentLoading && <p className="xp-recent-empty">Loading recent…</p>}
+          {!recentLoading && recent.length === 0 && (
+            <div className="gw-empty" style={{ padding: '32px 24px' }}>
+              <p style={{ margin: '0 0 8px', fontWeight: 600, color: 'var(--gw-text-primary)' }}>
+                No searches yet
+              </p>
+              <p style={{ margin: 0 }}>
+                Type a stock symbol or company name above and hit Analyse. Results appear here as a
+                3×10 grid.
+              </p>
+            </div>
+          )}
+          {!recentLoading && recent.length > 0 && (
+            <div className="xp-recent-grid">
+              {Array.from({ length: 30 }, (_, i) => {
+                const item = recent[i]
+                if (!item) {
+                  return <div key={`empty-${i}`} className="xp-recent-cell is-empty" aria-hidden />
+                }
+                return (
+                  <button
+                    key={item.symbol}
+                    type="button"
+                    className="xp-recent-cell"
+                    title={`${item.symbol} — ${item.company}`}
+                    onClick={() => runAnalysis(item.symbol)}
+                  >
+                    <span className="xp-recent-sym">{item.symbol}</span>
+                    <span className="xp-recent-name">{item.company}</span>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </section>
+      )}
+
       {loading && (
         <div className="gw-loading">
           <span className="gw-spinner" />
@@ -211,18 +291,6 @@ export default function Explore() {
       )}
 
       {error && !loading && <div className="gw-empty">{error}</div>}
-
-      {!loading && !error && !analysis && (
-        <div className="gw-empty" style={{ padding: '48px 24px' }}>
-          <p style={{ margin: '0 0 8px', fontWeight: 600, color: 'var(--gw-text-primary)' }}>
-            Deep stock research
-          </p>
-          <p style={{ margin: 0 }}>
-            Type a stock symbol or company name above and hit Analyse to generate a detailed,
-            evidence-backed report.
-          </p>
-        </div>
-      )}
 
       {analysis && report && !loading && (
         <div className="xp-report">
@@ -244,6 +312,7 @@ export default function Explore() {
                   {Number(analysis.metrics.change_pct) >= 0 ? '+' : ''}
                   {fmtNum(analysis.metrics.change_pct)}%
                 </span>
+                {analysis.from_cache && <span className="xp-tag xp-cache-tag">Cached today</span>}
               </div>
             </div>
             <div className="xp-head-right">

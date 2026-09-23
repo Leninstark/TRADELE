@@ -125,10 +125,9 @@ def check_token_status(db: Session, username: str, *, live_check: bool = True) -
 
     if live_check:
         try:
-            from kiteconnect import KiteConnect
+            from TRADELE.services.zerodha_client import make_kite
 
-            kite = KiteConnect(api_key=settings.kite_api_key)
-            kite.set_access_token(row.access_token)
+            kite = make_kite(access_token=row.access_token)
             kite.profile()
         except Exception as e:
             logger.info("Zerodha live check failed for %s: %s", username, e)

@@ -13,6 +13,8 @@ build/
 *.log
 .DS_Store
 data/nifty500.txt
+data/jarvis/sessions/
+data/jarvis/testlab_1m_*.xlsx
 UI/node_modules/
 UI/dist/
 .vercel/

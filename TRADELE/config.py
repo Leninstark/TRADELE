@@ -44,6 +44,11 @@ class Settings(BaseSettings):
     kite_api_secret: str = ""
     kite_access_token: str = ""
 
+    # Groww
+    groww_api_key: str = ""
+    groww_api_secret: str = ""
+    groww_access_token: str = ""
+
     # Database — local defaults match pgAdmin: postgres DB, Tradele schema
     db_host: str = Field(default=_db_file.get("host", "localhost"), validation_alias="DB_HOST")
     db_port: int = Field(default=int(_db_file.get("port", 5432)), validation_alias="DB_PORT")
@@ -70,8 +75,22 @@ class Settings(BaseSettings):
     alert_email_to: str = ""
 
     # LLM (optional)
+    # Primary provider: claude_cli | gemini | openai
+    llm_provider: str = Field(default="claude_cli", validation_alias="LLM_PROVIDER")
+    # Comma-separated fallbacks after primary fails (default: remaining providers)
+    llm_fallback: str = Field(default="gemini,openai", validation_alias="LLM_FALLBACK")
     openai_api_key: Optional[str] = None
     llm_base_url: Optional[str] = None
+    openai_model: str = Field(default="gpt-4o-mini", validation_alias="OPENAI_MODEL")
+
+    # Claude Code CLI (uses local `claude auth login` / Pro subscription)
+    claude_cli_path: str = Field(default="", validation_alias="CLAUDE_CLI_PATH")
+    claude_cli_model: str = Field(default="sonnet", validation_alias="CLAUDE_CLI_MODEL")
+    claude_cli_timeout: int = Field(default=300, validation_alias="CLAUDE_CLI_TIMEOUT")
+    # If true, scrub ANTHROPIC_API_KEY from child env so Pro subscription is used
+    claude_cli_use_subscription: bool = Field(
+        default=True, validation_alias="CLAUDE_CLI_USE_SUBSCRIPTION"
+    )
 
     # Gemini
     gemini_api_key: Optional[str] = None
@@ -96,6 +115,11 @@ class Settings(BaseSettings):
     # Dashboard / quick scans
     dashboard_max_symbols: int = 30
     momentum_max_symbols: int = 50
+
+    # Groww MyTrade — auto-sync after market close (Mon–Fri IST)
+    groww_eod_sync_enabled: bool = Field(default=True, validation_alias="GROWW_EOD_SYNC_ENABLED")
+    groww_eod_sync_hour: int = Field(default=16, validation_alias="GROWW_EOD_SYNC_HOUR")
+    groww_eod_sync_minute: int = Field(default=0, validation_alias="GROWW_EOD_SYNC_MINUTE")
 
     @computed_field  # type: ignore[prop-decorator]
     @property
